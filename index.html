@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Team 帳號登記</title>
+<meta name="description" content="勤益科大 Claude Team 帳號登記：請填寫姓名、學號與學校 Gmail。">
+<style>
+  :root{
+    --bg:#f7f4ee; --card:#ffffff; --ink:#23201c; --muted:#6b645b;
+    --line:#e6e0d6; --accent:#c96442; --accent-ink:#ffffff; --accent-soft:#f6e4dc;
+    --ok:#2f7a4f; --ok-soft:#e3f2e8; --err:#b3261e; --err-soft:#fbe4e2;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1c1a17; --card:#262320; --ink:#f1ede6; --muted:#aaa296;
+      --line:#3a352f; --accent:#e0805d; --accent-ink:#1c1a17; --accent-soft:#3a2a22;
+      --ok:#7fd0a0; --ok-soft:#1f3328; --err:#ff9a90; --err-soft:#3d2220;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.65}
+  .wrap{max-width:640px;margin:0 auto;padding:28px 16px 60px}
+  header{text-align:center;margin-bottom:22px}
+  .badge{display:inline-block;background:var(--accent-soft);color:var(--accent);
+    font-size:13px;font-weight:600;padding:4px 12px;border-radius:999px;letter-spacing:.5px}
+  h1{font-size:clamp(24px,6vw,32px);margin:12px 0 4px;letter-spacing:.5px}
+  .sub{color:var(--muted);margin:0;font-size:15px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 20px;margin-bottom:18px}
+  .card h2{font-size:19px;margin:0 0 4px}
+  .card .hint{color:var(--muted);font-size:14px;margin:0 0 16px}
+  .stats{display:flex;gap:12px;flex-wrap:wrap}
+  .stat{flex:1 1 140px;background:var(--bg);border-radius:10px;padding:12px 14px}
+  .stat b{display:block;font-size:26px;color:var(--accent);line-height:1.2}
+  .stat span{font-size:13px;color:var(--muted)}
+  label{display:block;font-weight:600;font-size:15px;margin:14px 0 6px}
+  label .req{color:var(--accent)}
+  input[type=text],input[type=email]{width:100%;font-size:16px;padding:11px 12px;border:1px solid var(--line);
+    border-radius:10px;background:var(--card);color:var(--ink);outline:none;transition:border .15s}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .email-row{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+  .email-row:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .email-row input{border:0;border-radius:0;min-width:0;flex:1}
+  .email-row input:focus{box-shadow:none}
+  .email-row .domain{display:flex;align-items:center;padding:0 12px;background:var(--bg);color:var(--muted);
+    font-size:14px;white-space:nowrap;border-left:1px solid var(--line)}
+  .field-note{font-size:13px;color:var(--muted);margin-top:5px}
+  .check{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;color:var(--muted);margin-top:18px}
+  .check input{margin-top:5px;accent-color:var(--accent);width:16px;height:16px;flex:none}
+  button{width:100%;margin-top:18px;font-size:16px;font-weight:700;padding:12px;border:0;border-radius:10px;
+    background:var(--accent);color:var(--accent-ink);cursor:pointer;transition:opacity .15s}
+  button:hover{opacity:.9}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+  .msg{display:none;margin-top:14px;padding:11px 14px;border-radius:10px;font-size:15px}
+  .msg.show{display:block}
+  .msg.ok{background:var(--ok-soft);color:var(--ok)}
+  .msg.err{background:var(--err-soft);color:var(--err)}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  details summary{cursor:pointer;font-weight:700;font-size:17px;list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"＋";float:right;color:var(--accent)}
+  details[open] summary::after{content:"－"}
+  details[open] summary{margin-bottom:10px}
+  .notice{font-size:14px;color:var(--muted)}
+  .notice ul{padding-left:20px;margin:6px 0}
+  .demo{background:var(--err-soft);color:var(--err);font-size:13px;text-align:center;padding:8px;border-radius:10px;margin-bottom:16px;display:none}
+  footer{text-align:center;color:var(--muted);font-size:13px;margin-top:28px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="demo" id="demoBar">⚠ 尚未設定後台網址（API_URL），目前為展示模式，資料不會被儲存。</div>
+
+  <header>
+    <span class="badge" id="orgBadge">智慧自動化工程系 · 四智一丙</span>
+    <h1 id="pageTitle">Claude Team 帳號登記</h1>
+    <p class="sub" id="pageSub">請以學校 Gmail 完成登記，以便加入 Claude Team 使用</p>
+  </header>
+
+  <!-- 登記統計 -->
+  <section class="card">
+    <h2>登記狀況</h2>
+    <p class="hint" id="deadlineText">&nbsp;</p>
+    <div class="stats">
+      <div class="stat"><b id="statCount">—</b><span>已登記人數</span></div>
+      <div class="stat"><b id="statSeats">—</b><span>剩餘名額</span></div>
+    </div>
+  </section>
+
+  <!-- 登記表單 -->
+  <section class="card">
+    <h2>填寫登記資料</h2>
+    <p class="hint">同一學號重複送出會更新為最新資料。</p>
+    <form id="regForm" novalidate>
+      <label for="name">姓名 <span class="req">*</span></label>
+      <input type="text" id="name" name="name" maxlength="30" autocomplete="name" placeholder="例：王小明" required>
+
+      <label for="sid">學號 <span class="req">*</span></label>
+      <input type="text" id="sid" name="sid" maxlength="12" autocomplete="off" placeholder="例：4A123456" required>
+      <div class="field-note">英文字母會自動轉為大寫。</div>
+
+      <label for="emailUser">學校 E-mail <span class="req">*</span></label>
+      <div class="email-row">
+        <input type="text" id="emailUser" name="emailUser" maxlength="40" autocomplete="off" inputmode="email" placeholder="帳號" required>
+        <span class="domain" id="domainLabel">@gm.student.ncut.edu.tw</span>
+      </div>
+      <div class="field-note">輸入學號後會自動帶入，若帳號不同請自行修改。</div>
+
+      <!-- 防機器人欄位（真人看不到） -->
+      <div class="hp" aria-hidden="true"><input type="text" id="website" name="website" tabindex="-1" autocomplete="off"></div>
+
+      <label class="check"><input type="checkbox" id="agree" required>
+        <span>我同意本表單所填之姓名、學號與 E-mail 僅用於 Claude Team 帳號開通與課程管理，不作其他用途。</span></label>
+
+      <button type="submit" id="regBtn">送出登記</button>
+      <div class="msg" id="regMsg" role="status"></div>
+    </form>
+  </section>
+
+  <!-- 查詢 -->
+  <section class="card">
+    <details>
+      <summary>查詢登記狀態</summary>
+      <form id="checkForm" novalidate>
+        <label for="checkSid">學號</label>
+        <input type="text" id="checkSid" maxlength="12" placeholder="輸入學號查詢">
+        <button type="submit" class="ghost" id="checkBtn">查詢</button>
+        <div class="msg" id="checkMsg" role="status"></div>
+      </form>
+    </details>
+  </section>
+
+  <!-- 取消 -->
+  <section class="card">
+    <details>
+      <summary>取消登記</summary>
+      <form id="cancelForm" novalidate>
+        <p class="notice">請輸入登記時的學號與 E-mail 帳號以確認身分。</p>
+        <label for="cancelSid">學號</label>
+        <input type="text" id="cancelSid" maxlength="12">
+        <label for="cancelEmail">E-mail 帳號</label>
+        <div class="email-row">
+          <input type="text" id="cancelEmail" maxlength="40" inputmode="email" placeholder="帳號">
+          <span class="domain" id="domainLabel2">@gm.student.ncut.edu.tw</span>
+        </div>
+        <button type="submit" class="ghost" id="cancelBtn">確認取消</button>
+        <div class="msg" id="cancelMsg" role="status"></div>
+      </form>
+    </details>
+  </section>
+
+  <section class="card notice">
+    <h2 style="font-size:17px;color:var(--ink)">注意事項</h2>
+    <ul id="noticeList">
+      <li>僅接受 <b>@gm.student.ncut.edu.tw</b> 學校信箱。</li>
+      <li>邀請信將寄至你登記的學校信箱，請留意收件匣與垃圾郵件。</li>
+      <li>有任何問題請洽授課教師或助教。</li>
+    </ul>
+  </section>
+
+  <footer id="footerText">NCUT · Claude Team 登記系統</footer>
+</div>
+
+<script>
+/* ================== 設定區（只需修改這裡） ================== */
+const CONFIG = {
+  // 部署 Google Apps Script 後取得的「網頁應用程式網址」，貼在這裡
+  API_URL: "https://script.google.com/macros/s/AKfycbxt7A0XsyThjcK2ysU87T0qoE0N02EHcL84XM79HEJd-jjcqW5jGX29MyrjJlPY368/exec",
+  EMAIL_DOMAIN: "gm.student.ncut.edu.tw",
+  TITLE: "Claude Team 帳號登記",
+  SUBTITLE: "請以學校 Gmail 完成登記，以便加入 Claude Team 使用",
+  ORG: "智慧自動化工程系 · 四智一丙",
+  FOOTER: "國立勤益科技大學 智慧自動化工程系 · 四智一丙 · Claude Team 登記系統",
+  DEADLINE: "2026-09-28 23:59", // 例："2026-10-15 23:59"，留空表示不限
+  CAPACITY: 0,           // 名額上限，0 表示不限
+  // 學號格式：預設為 英數字 6~12 碼，可依學校規則調整
+  SID_PATTERN: /^[A-Z0-9]{6,12}$/
+};
+/* ========================================================== */
+
+const $ = id => document.getElementById(id);
+const DEMO = !CONFIG.API_URL;
+const demoStore = {};   // 展示模式用（僅存在記憶體）
+
+function applyConfig(){
+  document.title = CONFIG.TITLE;
+  $("pageTitle").textContent = CONFIG.TITLE;
+  $("pageSub").textContent = CONFIG.SUBTITLE;
+  $("orgBadge").textContent = CONFIG.ORG;
+  $("footerText").textContent = CONFIG.FOOTER;
+  $("domainLabel").textContent = $("domainLabel2").textContent = "@" + CONFIG.EMAIL_DOMAIN;
+  $("deadlineText").textContent = CONFIG.DEADLINE ? `登記截止：${CONFIG.DEADLINE}` : "登記進行中";
+  if (DEMO) $("demoBar").style.display = "block";
+}
+
+function showMsg(el, text, ok){
+  el.textContent = text;
+  el.className = "msg show " + (ok ? "ok" : "err");
+}
+
+function normSid(v){ return v.trim().toUpperCase().replace(/\s+/g,""); }
+function normUser(v){ return v.trim().toLowerCase().replace(/@.*$/,""); }
+
+function deadlinePassed(){
+  if(!CONFIG.DEADLINE) return false;
+  return new Date() > new Date(CONFIG.DEADLINE.replace(" ","T"));
+}
+
+/* ---------- 與後台溝通 ---------- */
+async function apiGet(params){
+  if (DEMO) return demoGet(params);
+  const url = CONFIG.API_URL + "?" + new URLSearchParams(params).toString();
+  const r = await fetch(url);
+  return r.json();
+}
+async function apiPost(data){
+  if (DEMO) return demoPost(data);
+  // 使用 text/plain 避免 CORS 預檢，Apps Script 端以 JSON.parse 讀取
+  const r = await fetch(CONFIG.API_URL, {
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify(data)
+  });
+  return r.json();
+}
+
+/* ---------- 展示模式（未設定 API_URL 時） ---------- */
+function demoGet(p){
+  const active = Object.values(demoStore).filter(x=>x.status==="已登記");
+  if(p.action==="stats") return {ok:true,count:active.length};
+  if(p.action==="check"){
+    const r = demoStore[p.stuid];
+    return r ? {ok:true,found:true,status:r.status,name:maskName(r.name),email:maskEmail(r.email)} : {ok:true,found:false};
+  }
+}
+function demoPost(d){
+  if(d.action==="register"){
+    const updated = !!demoStore[d.sid];
+    demoStore[d.sid] = {...d,status:"已登記"};
+    return {ok:true,updated,message: updated?"資料已更新（展示模式）":"登記成功（展示模式）"};
+  }
+  if(d.action==="cancel"){
+    const r = demoStore[d.sid];
+    if(!r || r.email!==d.email) return {ok:false,message:"查無相符的登記資料"};
+    r.status="已取消"; return {ok:true,message:"已取消登記（展示模式）"};
+  }
+}
+function maskName(n){ return n.length<=1?n: n[0] + "○".repeat(Math.max(1,n.length-2)) + (n.length>2?n.slice(-1):""); }
+function maskEmail(e){ const [u,d]=e.split("@"); return u.slice(0,2)+"***@"+d; }
+
+/* ---------- 統計 ---------- */
+async function loadStats(){
+  try{
+    const r = await apiGet({action:"stats"});
+    if(!r.ok) throw 0;
+    $("statCount").textContent = r.count;
+    $("statSeats").textContent = CONFIG.CAPACITY ? Math.max(0, CONFIG.CAPACITY - r.count) : "不限";
+  }catch(e){
+    $("statCount").textContent = "—";
+    $("statSeats").textContent = CONFIG.CAPACITY ? CONFIG.CAPACITY : "不限";
+  }
+}
+
+/* ---------- 學號自動帶入 Email ---------- */
+let emailTouched = false;
+$("emailUser").addEventListener("input", ()=> emailTouched = true);
+$("sid").addEventListener("input", e=>{
+  const s = normSid(e.target.value);
+  e.target.value = s;
+  if(!emailTouched) $("emailUser").value = s.toLowerCase();
+});
+["checkSid","cancelSid"].forEach(id=>$(id).addEventListener("input",e=>e.target.value=normSid(e.target.value)));
+
+/* ---------- 送出登記 ---------- */
+$("regForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const msg = $("regMsg");
+  if($("website").value) return;                 // 機器人
+  if(deadlinePassed()) return showMsg(msg,"登記已截止。",false);
+
+  const name = $("name").value.trim();
+  const sid  = normSid($("sid").value);
+  const user = normUser($("emailUser").value);
+  const email = user + "@" + CONFIG.EMAIL_DOMAIN;
+
+  if(!name) return showMsg(msg,"請填寫姓名。",false);
+  if(!CONFIG.SID_PATTERN.test(sid)) return showMsg(msg,"學號格式不正確，請確認。",false);
+  if(!/^[a-z0-9._-]{2,40}$/.test(user)) return showMsg(msg,"E-mail 帳號格式不正確。",false);
+  if(!$("agree").checked) return showMsg(msg,"請勾選同意個資使用說明。",false);
+
+  const btn = $("regBtn"); btn.disabled = true; btn.textContent = "送出中…";
+  try{
+    const r = await apiPost({action:"register",name,sid,email});
+    showMsg(msg, r.message || (r.ok?"登記成功！":"登記失敗"), r.ok);
+    if(r.ok){ $("regForm").reset(); emailTouched=false; loadStats(); }
+  }catch(err){
+    showMsg(msg,"網路或伺服器錯誤，請稍後再試。",false);
+  }finally{
+    btn.disabled = false; btn.textContent = "送出登記";
+  }
+});
+
+/* ---------- 查詢 ---------- */
+$("checkForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const msg = $("checkMsg"), sid = normSid($("checkSid").value);
+  if(!sid) return showMsg(msg,"請輸入學號。",false);
+  const btn=$("checkBtn"); btn.disabled=true;
+  try{
+    const r = await apiGet({action:"check",stuid:sid}); // 注意：sid 是 Apps Script 保留參數，不能用
+    if(!r.ok) showMsg(msg,r.message||"查詢失敗",false);
+    else if(!r.found) showMsg(msg,"查無此學號的登記資料。",false);
+    else showMsg(msg,`${r.name}（${r.email}）：${r.status}`, r.status==="已登記");
+  }catch(err){ showMsg(msg,"網路或伺服器錯誤，請稍後再試。",false); }
+  finally{ btn.disabled=false; }
+});
+
+/* ---------- 取消 ---------- */
+$("cancelForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const msg=$("cancelMsg");
+  const sid=normSid($("cancelSid").value), user=normUser($("cancelEmail").value);
+  if(!sid||!user) return showMsg(msg,"請輸入學號與 E-mail 帳號。",false);
+  const btn=$("cancelBtn"); btn.disabled=true;
+  try{
+    const r = await apiPost({action:"cancel",sid,email:user+"@"+CONFIG.EMAIL_DOMAIN});
+    showMsg(msg,r.message||(r.ok?"已取消":"取消失敗"),r.ok);
+    if(r.ok){ $("cancelForm").reset(); loadStats(); }
+  }catch(err){ showMsg(msg,"網路或伺服器錯誤，請稍後再試。",false); }
+  finally{ btn.disabled=false; }
+});
+
+applyConfig();
+loadStats();
+</script>
+</body>
+</html>
