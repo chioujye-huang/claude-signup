@@ -1,8 +1,8 @@
-# Claude Team 帳號登記網站
+# Claude 帳號登記網站
 
 智慧自動化工程系 · 四智一丙 — 學生填寫 **姓名、學號、學校 E-mail（@gm.student.ncut.edu.tw）**，資料自動寫入 Google 試算表。
 
-- 網站：https://chioujye-huang.github.io/claude-team-signup/
+- 網站：https://chioujye-huang.github.io/claude-signup/
 - 登記截止：2026-09-28 23:59（台灣時間）
 
 ```
@@ -22,7 +22,7 @@
 - 同一學號重複送出 → 更新資料；同一信箱不可被不同學號使用
 - 查詢登記狀態（姓名、信箱遮罩顯示）、取消登記（需學號＋信箱相符）
 - 登記人數統計、截止時間、防機器人欄位、多人同時送出的寫入鎖
-- 試算表選單「Claude Team → 產生邀請 Email 清單」
+- 試算表選單「Claude → 產生邀請 Email 清單」
 
 ## 維護
 
