@@ -69,6 +69,15 @@
   .notice ul{padding-left:20px;margin:6px 0}
   .demo{background:var(--err-soft);color:var(--err);font-size:13px;text-align:center;padding:8px;border-radius:10px;margin-bottom:16px;display:none}
   footer{text-align:center;color:var(--muted);font-size:13px;margin-top:28px}
+  .bgm-btn{position:fixed;right:16px;bottom:16px;z-index:50;width:auto;margin:0;padding:9px 14px;font-size:14px;font-weight:600;
+    border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+  .bgm-btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .bgm-btn .eq{display:inline-flex;gap:2px;align-items:flex-end;height:12px;margin-right:6px;vertical-align:-1px}
+  .bgm-btn .eq i{width:3px;height:4px;background:currentColor;border-radius:1px}
+  .bgm-btn.on .eq i{animation:eq 1s ease-in-out infinite}
+  .bgm-btn.on .eq i:nth-child(2){animation-delay:.2s}.bgm-btn.on .eq i:nth-child(3){animation-delay:.4s}
+  @keyframes eq{0%,100%{height:3px}50%{height:12px}}
+  @media (prefers-reduced-motion: reduce){.bgm-btn.on .eq i{animation:none;height:8px}}
 </style>
 </head>
 <body>
@@ -354,6 +363,152 @@ $("cancelForm").addEventListener("submit", async e=>{
 
 applyConfig();
 loadStats();
+</script>
+<button type="button" class="bgm-btn" id="bgmBtn" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="bgmLabel">點畫面播放音樂</span></button>
+<script>
+/* ============ 背景音樂：原創 Lo-fi，以 Web Audio 即時合成（無版權疑慮、不需音檔） ============ */
+(function(){
+  const BPM = 82, SPB = 60 / BPM, S16 = SPB / 4, VOL = 0.32;
+  const CHORDS = [[53,57,60,64],[52,55,59,62],[50,53,57,62],[48,52,55,59]]; // Fmaj7 Em7 Dm9 Cmaj7
+  const BASS   = [41,40,38,36];
+  const SCALE  = [60,62,64,67,69,72,74,76];                                 // C 大調五聲音階
+  const btn = document.getElementById("bgmBtn"), label = document.getElementById("bgmLabel");
+  let ctx, master, bus, noise, timer, nextT = 0, step = 0, started = false, enabled = true, phraseA, phraseB;
+  try { enabled = localStorage.getItem("bgm") !== "off"; } catch (e) {}
+
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+  let seed = 20260923;
+  const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+  function makePhrase(){               // 4 小節 × 8 個八分音符
+    const p = []; let idx = 3 + Math.floor(rnd() * 3);
+    for (let i = 0; i < 32; i++) {
+      if (rnd() < (i % 8 === 0 ? 0.75 : 0.38)) {
+        idx = Math.max(0, Math.min(SCALE.length - 1, idx + Math.floor(rnd() * 5) - 2));
+        p.push({ i, m: SCALE[idx], d: rnd() < 0.3 ? 2 : 1 });
+      }
+    }
+    return p;
+  }
+
+  function env(g, t, a, peak, dec, sus, rel, end){
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + a);
+    g.gain.exponentialRampToValueAtTime(Math.max(peak * sus, 0.0001), t + a + dec);
+    g.gain.setValueAtTime(Math.max(peak * sus, 0.0001), end);
+    g.gain.exponentialRampToValueAtTime(0.0001, end + rel);
+  }
+  function tone(type, freq, t, dur, peak, cutoff, detune){
+    const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+    o.type = type; o.frequency.value = freq; if (detune) o.detune.value = detune;
+    f.type = "lowpass"; f.frequency.value = cutoff;
+    o.connect(f); f.connect(g); g.connect(bus);
+    env(g, t, 0.015, peak, 0.35, 0.55, 0.4, t + dur);
+    o.start(t); o.stop(t + dur + 0.5);
+  }
+  function keys(t, m, dur, v){ tone("triangle", mtof(m), t, dur, v, 1600, -6); tone("sine", mtof(m), t, dur, v * 0.8, 3000, 7); }
+  function bass(t, m, dur){ tone("sine", mtof(m), t, dur, 0.34, 500, 0); }
+  function lead(t, m, dur){ tone("sine", mtof(m), t, dur, 0.09, 2400, 0); tone("triangle", mtof(m + 12), t, dur, 0.02, 2000, 4); }
+  function kick(t){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+    g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.38);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.4);
+  }
+  function hiss(t, type, freq, peak, len, q){
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = noise; f.type = type; f.frequency.value = freq; if (q) f.Q.value = q;
+    g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t, Math.random() * 0.5); s.stop(t + len + 0.02);
+  }
+  const snare = t => { hiss(t, "bandpass", 1900, 0.32, 0.2, 0.8); tone("triangle", 190, t, 0.03, 0.08, 1200, 0); };
+  const hat   = (t, v) => hiss(t, "highpass", 7500, v, 0.05);
+
+  function schedule(s, t){
+    const bar = Math.floor(s / 16), pos = s % 16, cyc = bar % 32, ci = bar % 4;
+    const drums = cyc >= 4 && cyc < 28;
+    if (pos === 0) {
+      CHORDS[ci].forEach((m, k) => keys(t + k * 0.012, m, SPB * 3.6, 0.075));
+      bass(t, BASS[ci], SPB * 1.8);
+      if (cyc % 16 === 0) phraseB = makePhrase();
+    }
+    if (pos === 10) CHORDS[ci].slice(1).forEach(m => keys(t, m + 12, SPB * 0.4, 0.03));
+    if (pos === 8)  bass(t, BASS[ci] + (ci % 2 ? 7 : 0), SPB * 1.2);
+    if (pos === 14) bass(t, BASS[ci] + 12, SPB * 0.3);
+    if (drums) {
+      if (pos === 0 || pos === 7 || pos === 10) kick(t);
+      if (pos === 4 || pos === 12) snare(t);
+      if (pos % 2 === 0) hat(t + (pos % 4 === 2 ? S16 * 0.35 : 0), pos % 4 === 0 ? 0.09 : 0.05);
+    }
+    if (cyc >= 8 && cyc < 28 && pos % 2 === 0) {                   // 旋律：A A B A
+      const ph = (Math.floor(bar / 4) % 4 === 2) ? phraseB : phraseA;
+      const i = (bar % 4) * 8 + pos / 2;
+      ph.filter(n => n.i === i).forEach(n => lead(t, n.m, S16 * 2 * n.d * 0.9));
+    }
+  }
+  function tick(){
+    while (nextT < ctx.currentTime + 0.15) { schedule(step, nextT); nextT += S16; step++; }
+  }
+  function crackle(){                                             // 黑膠底噪
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = noise; s.loop = true; f.type = "highpass"; f.frequency.value = 3000; g.gain.value = 0.012;
+    s.connect(f); f.connect(g); g.connect(master); s.start();
+  }
+  function init(){
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+    ctx = new AC();
+    master = ctx.createGain(); master.gain.value = 0.0001;
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 6000;
+    master.connect(lp); lp.connect(ctx.destination);
+    bus = ctx.createGain(); bus.connect(master);
+    const dly = ctx.createDelay(1), fb = ctx.createGain(), wet = ctx.createGain();
+    dly.delayTime.value = SPB * 0.75; fb.gain.value = 0.28; wet.gain.value = 0.22;
+    bus.connect(dly); dly.connect(fb); fb.connect(dly); dly.connect(wet); wet.connect(master);
+    noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    phraseA = makePhrase(); phraseB = makePhrase();
+    crackle();
+    nextT = ctx.currentTime + 0.1; timer = setInterval(tick, 25);
+    return true;
+  }
+  function fade(to, sec){
+    const t = ctx.currentTime; master.gain.cancelScheduledValues(t);
+    master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), t);
+    master.gain.exponentialRampToValueAtTime(Math.max(to, 0.0001), t + sec);
+  }
+  function play(){
+    if (!ctx && !init()) return;
+    started = true; ctx.resume(); fade(VOL, 2); ui();
+  }
+  function stop(){
+    if (!ctx) return;
+    fade(0.0001, 0.4); setTimeout(() => { if (!enabled || document.hidden) ctx.suspend(); }, 450); ui();
+  }
+  function ui(){
+    const on = started && enabled;
+    btn.classList.toggle("on", on); btn.setAttribute("aria-pressed", on);
+    label.textContent = !started && enabled ? "點畫面播放音樂" : on ? "背景音樂：開" : "背景音樂：關";
+  }
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    enabled = !(started && enabled);
+    try { localStorage.setItem("bgm", enabled ? "on" : "off"); } catch (err) {}
+    enabled ? play() : stop();
+  });
+  const firstGesture = e => {                                     // 瀏覽器規定：需使用者互動後才能發聲
+    if (started || !enabled || btn.contains(e.target)) return;
+    play();
+  };
+  ["pointerdown", "keydown", "touchend"].forEach(ev => document.addEventListener(ev, firstGesture, true));
+  // 離開網站（切換分頁、縮小、關閉）時自動停止；回來時若音樂為開啟則繼續
+  document.addEventListener("visibilitychange", () => {
+    if (!ctx || !started) return;
+    if (document.hidden) { master.gain.setValueAtTime(0.0001, ctx.currentTime); ctx.suspend(); }
+    else if (enabled) { ctx.resume(); fade(VOL, 1.5); }
+  });
+  window.addEventListener("pagehide", () => { if (ctx) { clearInterval(timer); ctx.close(); } });
+  ui();
+})();
 </script>
 </body>
 </html>
