@@ -1,5 +1,5 @@
 /**
- * Claude Team 帳號登記 — Google Apps Script 後台
+ * Claude 帳號登記 — Google Apps Script 後台
  * 資料存放在綁定的 Google 試算表中（工作表「登記名單」）
  *
  * 使用方式：
@@ -57,7 +57,7 @@ function doGet(e) {
         status: v[COL.status - 1]
       });
     }
-    return json_({ ok: true, service: 'Claude Team 登記系統運作中' });
+    return json_({ ok: true, service: 'Claude 登記系統運作中' });
   } catch (err) {
     return json_({ ok: false, message: '伺服器錯誤：' + err.message });
   }
@@ -114,13 +114,13 @@ function register_(sh, d) {
 
   if (SEND_CONFIRM_EMAIL) {
     try {
-      MailApp.sendEmail(email, '【Claude Team】登記成功通知',
-        name + ' 同學您好：\n\n您已完成 Claude Team 帳號登記。\n學號：' + sid +
+      MailApp.sendEmail(email, '【Claude】登記成功通知',
+        name + ' 同學您好：\n\n您已完成 Claude 帳號登記。\n學號：' + sid +
         '\n\n後續邀請信將寄至此信箱，請留意收件。\n\n（本信由系統自動寄出）');
     } catch (err) { /* 寄信失敗不影響登記 */ }
   }
   if (NOTIFY_ADMIN_EMAIL) {
-    try { MailApp.sendEmail(NOTIFY_ADMIN_EMAIL, '[Claude Team] 新登記：' + name, name + ' / ' + sid + ' / ' + email); } catch (err) {}
+    try { MailApp.sendEmail(NOTIFY_ADMIN_EMAIL, '[Claude] 新登記：' + name, name + ' / ' + sid + ' / ' + email); } catch (err) {}
   }
   return { ok: true, updated: false, message: '登記成功！' };
 }
@@ -171,7 +171,7 @@ function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
-/** 管理用：把「已登記」的 Email 列成一欄，方便複製貼到 Claude Team 邀請 */
+/** 管理用：把「已登記」的 Email 列成一欄，方便複製貼到 Claude 邀請 */
 function exportActiveEmails() {
   const sh = getSheet_();
   const n = sh.getLastRow() - 1;
@@ -187,7 +187,7 @@ function exportActiveEmails() {
 
 /** 在試算表上方加入選單 */
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('Claude Team')
+  SpreadsheetApp.getUi().createMenu('Claude')
     .addItem('初始化工作表', 'setup')
     .addItem('產生邀請 Email 清單', 'exportActiveEmails')
     .addToUi();
