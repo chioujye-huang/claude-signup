@@ -212,21 +212,38 @@ function deadlinePassed(){
 }
 
 /* ---------- 與後台溝通 ---------- */
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+// Apps Script 偶爾回應很慢或逾時，失敗時自動重試
+async function fetchJSON(url, opts, tries){
+  for(let i=0;i<tries;i++){
+    try{ const r = await fetch(url, opts); return JSON.parse(await r.text()); }
+    catch(e){ if(i===tries-1) throw e; await sleep(1500*(i+1)); }
+  }
+}
 async function apiGet(params){
   if (DEMO) return demoGet(params);
   const url = CONFIG.API_URL + "?" + new URLSearchParams(params).toString();
-  const r = await fetch(url);
-  return r.json();
+  return fetchJSON(url, {}, 3);
 }
 async function apiPost(data){
   if (DEMO) return demoPost(data);
   // 使用 text/plain 避免 CORS 預檢，Apps Script 端以 JSON.parse 讀取
-  const r = await fetch(CONFIG.API_URL, {
-    method:"POST",
-    headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body: JSON.stringify(data)
-  });
-  return r.json();
+  try{
+    return await fetchJSON(CONFIG.API_URL, {
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify(data)
+    }, 1);
+  }catch(e){
+    // 回應失敗不代表沒寫入：向後台確認實際狀態
+    await sleep(2000);
+    const c = await apiGet({action:"check", stuid:data.sid});
+    if(c && c.ok && c.found){
+      if(data.action==="register" && c.status==="已登記") return {ok:true, message:"登記成功！"};
+      if(data.action==="cancel" && c.status==="已取消") return {ok:true, message:"已取消登記。"};
+    }
+    throw e;
+  }
 }
 
 /* ---------- 展示模式（未設定 API_URL 時） ---------- */
