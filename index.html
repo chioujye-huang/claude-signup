@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Claude Team 帳號登記</title>
-<meta name="description" content="勤益科大 Claude Team 帳號登記：請填寫姓名、學號與學校 Gmail。">
+<title>Claude 帳號登記</title>
+<meta name="description" content="勤益科大 Claude 帳號登記：請填寫姓名、學號與學校 Gmail。">
 <style>
   :root{
     --bg:#f7f4ee; --card:#ffffff; --ink:#23201c; --muted:#6b645b;
@@ -87,8 +87,8 @@
 
   <header>
     <span class="badge" id="orgBadge">智慧自動化工程系 · 四智一丙</span>
-    <h1 id="pageTitle">Claude Team 帳號登記</h1>
-    <p class="sub" id="pageSub">請以學校 Gmail 完成登記，以便加入 Claude Team 使用</p>
+    <h1 id="pageTitle">Claude 帳號登記</h1>
+    <p class="sub" id="pageSub">請以學校 Gmail 完成登記，以便加入 Claude 使用</p>
   </header>
 
   <!-- 登記統計 -->
@@ -124,7 +124,7 @@
       <div class="hp" aria-hidden="true"><input type="text" id="website" name="website" tabindex="-1" autocomplete="off"></div>
 
       <label class="check"><input type="checkbox" id="agree" required>
-        <span>我同意本表單所填之姓名、學號與 E-mail 僅用於 Claude Team 帳號開通與課程管理，不作其他用途。</span></label>
+        <span>我同意本表單所填之姓名、學號與 E-mail 僅用於 Claude 帳號開通與課程管理，不作其他用途。</span></label>
 
       <button type="submit" id="regBtn">送出登記</button>
       <div class="msg" id="regMsg" role="status"></div>
@@ -172,7 +172,7 @@
     </ul>
   </section>
 
-  <footer id="footerText">NCUT · Claude Team 登記系統</footer>
+  <footer id="footerText">NCUT · Claude 登記系統</footer>
 </div>
 
 <script>
@@ -181,10 +181,10 @@ const CONFIG = {
   // 部署 Google Apps Script 後取得的「網頁應用程式網址」，貼在這裡
   API_URL: "https://script.google.com/macros/s/AKfycbxt7A0XsyThjcK2ysU87T0qoE0N02EHcL84XM79HEJd-jjcqW5jGX29MyrjJlPY368/exec",
   EMAIL_DOMAIN: "gm.student.ncut.edu.tw",
-  TITLE: "Claude Team 帳號登記",
-  SUBTITLE: "請以學校 Gmail 完成登記，以便加入 Claude Team 使用",
+  TITLE: "Claude 帳號登記",
+  SUBTITLE: "請以學校 Gmail 完成登記，以便加入 Claude 使用",
   ORG: "智慧自動化工程系 · 四智一丙",
-  FOOTER: "國立勤益科技大學 智慧自動化工程系 · 四智一丙 · Claude Team 登記系統",
+  FOOTER: "國立勤益科技大學 智慧自動化工程系 · 四智一丙 · Claude 登記系統",
   DEADLINE: "2026-09-28 23:59", // 例："2026-10-15 23:59"，留空表示不限
   CAPACITY: 0,           // 名額上限，0 表示不限
   // 學號格式：預設為 英數字 6~12 碼，可依學校規則調整
