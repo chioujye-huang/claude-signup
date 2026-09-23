@@ -3,7 +3,7 @@
 智慧自動化工程系 · 四智一丙 — 學生填寫 **姓名、學號、學校 E-mail（@gm.student.ncut.edu.tw）**，資料自動寫入 Google 試算表。
 
 - 網站：https://chioujye-huang.github.io/claude-signup/
-- 登記截止：2026-09-28 23:59（台灣時間）
+- 登記截止：2026-09-25（五）23:59（台灣時間）
 
 ```
 學生瀏覽器 ──► GitHub Pages（index.html）──fetch──► Google Apps Script 網頁應用程式 ──► Google 試算表「登記名單」
