@@ -15,7 +15,7 @@ const SHEET_NAME   = '登記名單';
 const EMAIL_DOMAIN = 'gm.student.ncut.edu.tw';
 const SID_PATTERN  = /^[A-Z0-9]{6,12}$/;   // 學號格式，請與前端一致
 const CAPACITY     = 0;                     // 名額上限，0 = 不限
-const DEADLINE     = '2026-09-28T23:59:59+08:00';                    // 例：'2026-10-15T23:59:00+08:00'，留空 = 不限
+const DEADLINE     = '2026-09-25T23:59:59+08:00';                    // 例：'2026-10-15T23:59:00+08:00'，留空 = 不限
 const SEND_CONFIRM_EMAIL = false;           // true = 登記成功後寄確認信給學生
 const NOTIFY_ADMIN_EMAIL = '';              // 填入信箱則每筆新登記通知管理者，留空 = 不通知
 // ===========================================
